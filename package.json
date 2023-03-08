@@ -1,0 +1,26 @@
+{
+  "name": "bot_linkedin",
+  "version": "1.0.0",
+  "description": "Rápido e interactivo\r Desarrollado en NODE.JS",
+  "main": "app.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cron": "^2.2.0",
+    "fs": "^0.0.1-security",
+    "ip": "^1.1.8",
+    "nodemailer": "^6.9.1",
+    "os": "^0.1.2",
+    "promise-poller": "^1.9.1",
+    "puppeteer": "^19.7.2",
+    "request": "^2.88.2",
+    "request-promise-native": "^1.0.9"
+  }
+}

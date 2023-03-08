@@ -1,0 +1,16 @@
+[
+  {
+    "name": "PHPSESSID",
+    "value": "1gve801e824n4et7kkq1m1kn86",
+    "domain": "tramites.saime.gob.ve",
+    "path": "/",
+    "expires": -1,
+    "size": 35,
+    "httpOnly": false,
+    "secure": false,
+    "session": true,
+    "sameParty": false,
+    "sourceScheme": "Secure",
+    "sourcePort": 443
+  }
+]
