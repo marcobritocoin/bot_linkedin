@@ -1,15 +1,15 @@
-# BOT REVISION SAIME
-## _Interacciones con web del saime_
+# BOT postulación LINKEDIN
+## _Interacciones con web del Linkedin_
 
 Rápido e interactivo
 Desarrollado en NODE.JS
 
-- Interacciones con el saime
+- Interacciones con el Linkedin
 - ✨Magía ✨
 
 ## Novedades
 
-- Drag and drop de nada
+- Adrenalina y activo para que te llamen a trabajar
 
 
 ## Technologías utilizadas
