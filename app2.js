@@ -3,11 +3,13 @@ const config = require('./modules/config');
 const helpers = require('./modules/helpers');
 const CronJob = require('cron').CronJob;
 const fs = require('fs');
+const nopostular = ['quental', 'ibermatica', 'biten'];
+
 
 const browser = async function() {
     const bro = await puppeteer.launch({
-        // headless: config.headless,
-        headless: true,
+        headless: config.headless,
+        //headless: true,
         handleSIGINT: false,
         ignoreHTTPSErrors: true,
         args: [
@@ -63,7 +65,10 @@ async function main() {
     const timeWait = 200;
 
     //const searchJobText = "remoto"; // "freelance" , "full stack";
-    const searchJobText = "full stack";  // RPA // NODE // ANGULAR // BACKEND // JEJE 
+    const searchJobText = "remote";  // RPA // NODE // ANGULAR // BACKEND // JEJE 
+
+    let offerRecommended = false;
+    //offerRecommended = "https://www.linkedin.com/jobs/collections/recommended/?currentJobId=3517573132";
 
     const cookiesUsed = '/cookies_linkedin.json';
     const dataOfferCsv = './dataExtract/dataExtract_'+formatTime+'.csv';
@@ -81,7 +86,8 @@ async function main() {
     const selBtnSimpleRequest = '[class="artdeco-pill artdeco-pill--slate artdeco-pill--2 artdeco-pill--choice artdeco-pill--selected ember-view search-reusables__filter-pill-button"]';
     const selBtnSimpleOffer = '[class="jobs-apply-button artdeco-button artdeco-button--3 artdeco-button--primary ember-view"]';
     const selDivApplyJob = '[class="jobs-s-apply jobs-s-apply--fadein inline-flex mr2"]';
-    let numberScroll = 1300;
+    // let numberScroll = 1300;
+    let numberScroll = 70;
     let totalPage=null;
     let pagina = 1;
     let titleWin = '';
@@ -134,59 +140,75 @@ async function main() {
         await helpers.delay(timeWait);
         // await page.click(selJobs);
 
-        await page.goto(urlJobs, {
-            waitUntil: "networkidle2",
-            timeout: 60000
-        });
-        
-        updateInfoAuto(page,'Buscando ofertas de empleo');
+        if(!offerRecommended){
 
-        await page.waitForSelector(inputSearchJob, {
-            timeout: 60000
-        });
-
-        /* BUSCAR UN TERMINO EN EL BUSCADOR SUPERIOR */
-        await helpers.delay(1500);
-        await page.type(inputSearchJob, searchJobText);
-        await helpers.delay(1000);
-        await page.evaluate(()=>document.querySelector('.jobs-search-box__submit-button--hidden').click());
-        // await page.keyboard.press('Enter');
-        // await helpers.delay(500);
-        // await enterSimulate(page,inputSearchJob);
-        updateInfoAuto(page,'Esperamos resultados de la busqueda');
-        await helpers.delay(500);
-        
-        /* ESPERANDO LOS DATOS DE EMPLEO */
-        await page.waitForSelector(selbtnFilter, {
-            timeout: 60000
-        });
-        await helpers.delay(1500);
-
-
-        /* VERIFICANDO SI YA APLIQUE LOS FILTROS */
-        const easyApplyBtn = await page.evaluate(()=>document.querySelector('[class="search-reusables__filter-binary-toggle"]').querySelector('[aria-checked="true"]'));
-
-        if(!easyApplyBtn){
-            console.log('Aplicando los filtros correspondientes');
-            /* APLICANDO FILTROS */
-            await page.evaluate(`document.querySelector('${selbtnFilter}').children[0].click();`);
-            updateInfoAuto(page,'Configurando criterios en los filtros');
-            await helpers.delay(300);
-            // await page.evaluate(`document.querySelectorAll(${selFilterDate})[1].querySelectorAll('li')[2].children[0].click();`); /* Fecha publicacion - Ultimas 24 h*/
-            await page.evaluate(`document.querySelectorAll('${selFilterTypeJob}')[4].querySelectorAll('li')[0].children[0].click()`); /* Filter Tipo empleo */
-            await page.evaluate(`document.querySelectorAll('${selFilterTypeJob}')[4].querySelectorAll('li')[1].children[0].click()`); /* Filter Tipo empleo */
-            await page.evaluate(`document.querySelectorAll('${selFilterTypeJob}')[4].querySelectorAll('li')[2].children[0].click()`); /* Filter Tipo empleo */
-            await page.evaluate(`document.querySelectorAll('${selFilterTypeJob}')[4].querySelectorAll('li')[3].children[0].click()`); /* Filter Tipo empleo */
-            await page.evaluate(`document.querySelectorAll('${selFilterRemote}')[5].querySelectorAll('li')[1].children[0].click();`); /* Filter remoto */
-            await page.evaluate(`document.querySelector('${selSimpleSolicitud}').children[0].click();`); /* Solicitud sencilla */
-            console.log("Activo para filtrar...");
-            await helpers.delay(1300);
-            await page.click(selBtnFilterSearch);
-
-            await helpers.delay(1000);
-            await page.waitForSelector(selBtnSimpleRequest, {
+            await page.goto(urlJobs, {
+                waitUntil: "networkidle2",
                 timeout: 60000
             });
+            
+            updateInfoAuto(page,'Buscando ofertas de empleo');
+
+            await page.waitForSelector(inputSearchJob, {
+                timeout: 60000
+            });
+
+            /* BUSCAR UN TERMINO EN EL BUSCADOR SUPERIOR */
+            await helpers.delay(1500);
+            await page.type(inputSearchJob, searchJobText);
+            await helpers.delay(1000);
+            await page.evaluate(()=>document.querySelector('.jobs-search-box__submit-button--hidden').click());
+            // await page.keyboard.press('Enter');
+            // await helpers.delay(500);
+            // await enterSimulate(page,inputSearchJob);
+            updateInfoAuto(page,'Esperamos resultados de la busqueda');
+            await helpers.delay(500);
+            
+            /* ESPERANDO LOS DATOS DE EMPLEO */
+            await page.waitForSelector(selbtnFilter, {
+                timeout: 60000
+            });
+            await helpers.delay(1500);
+
+
+            /* VERIFICANDO SI YA APLIQUE LOS FILTROS */
+            const easyApplyBtn = await page.evaluate(()=>document.querySelector('[class="search-reusables__filter-binary-toggle"]').querySelector('[aria-checked="true"]'));
+
+            if(!easyApplyBtn){
+                console.log('Aplicando los filtros correspondientes');
+                /* APLICANDO FILTROS */
+                await page.evaluate(`document.querySelector('${selbtnFilter}').children[0].click();`);
+                updateInfoAuto(page,'Configurando criterios en los filtros');
+                await helpers.delay(300);
+                // await page.evaluate(`document.querySelectorAll(${selFilterDate})[1].querySelectorAll('li')[2].children[0].click();`); /* Fecha publicacion - Ultimas 24 h*/
+                await page.evaluate(`document.querySelectorAll('${selFilterTypeJob}')[4].querySelectorAll('li')[0].children[0].click()`); /* Filter Tipo empleo */
+                await page.evaluate(`document.querySelectorAll('${selFilterTypeJob}')[4].querySelectorAll('li')[1].children[0].click()`); /* Filter Tipo empleo */
+                await page.evaluate(`document.querySelectorAll('${selFilterTypeJob}')[4].querySelectorAll('li')[2].children[0].click()`); /* Filter Tipo empleo */
+                await page.evaluate(`document.querySelectorAll('${selFilterTypeJob}')[4].querySelectorAll('li')[3].children[0].click()`); /* Filter Tipo empleo */
+                await page.evaluate(`document.querySelectorAll('${selFilterRemote}')[5].querySelectorAll('li')[1].children[0].click();`); /* Filter remoto */
+                await page.evaluate(`document.querySelector('${selSimpleSolicitud}').children[0].click();`); /* Solicitud sencilla */
+                console.log("Activo para filtrar...");
+                await helpers.delay(1300);
+                await page.click(selBtnFilterSearch);
+
+                await helpers.delay(1000);
+                await page.waitForSelector(selBtnSimpleRequest, {
+                    timeout: 60000
+                });
+            }
+        }else{
+            /* Ofertas recomendadas por LINKEDIN */
+            await page.goto(offerRecommended, {
+                    waitUntil: "networkidle2",
+                    timeout: 60000
+            });
+                
+            updateInfoAuto(page,'Buscando ofertas de empleo');
+
+            await page.waitForSelector('[id="results-list__title"]', {
+                timeout: 60000
+            });
+
         }
 
         await helpers.delay(2000);
@@ -197,9 +219,13 @@ async function main() {
         updateInfoAuto(page,'Cantidad de resultados totales: '+ resultCount);
 
         totalPage = await page.evaluate(()=>{
-            const totalPageBrut = document.querySelector('[class="artdeco-pagination__pages artdeco-pagination__pages--number"]').querySelectorAll('li');
-            const totalPage = totalPageBrut ? Number(totalPageBrut[totalPageBrut.length-1].innerText): 0;
-            return totalPage;
+            try{
+                const totalPageBrut = document.querySelector('[class="artdeco-pagination__pages artdeco-pagination__pages--number"]').querySelectorAll('li');
+                const totalPage = totalPageBrut ? Number(totalPageBrut[totalPageBrut.length-1].innerText): 0;
+                return totalPage;
+            }catch(e){
+                return 1
+            }
         });
 
         titleWin = 'Total de paginas: ' + totalPage;
@@ -207,20 +233,20 @@ async function main() {
         updateInfoAuto(page,titleWin);
 
         console.log('----------------');
+
+        const listCount = await page.evaluate(()=>{
+            try{
+                return Number(document.querySelector('[class="scaffold-layout__list-container"]').childElementCount);
+            }catch(e){
+                return 0;
+            }
+        });
         
         /* RECORRIENDO LISTADO DE EMPLEOS */
         if(totalPage > 1){
             for(let j=1; j<totalPage; j++){
                 updateInfoAuto(page,'Pagina actual: '+ j);
 
-                const listCount = await page.evaluate(()=>{
-                    try{
-                        return Number(document.querySelector('[class="scaffold-layout__list-container"]').childElementCount);
-                    }catch(e){
-                        return 0;
-                    }
-                });
-                
                 await offerProcess(page, listCount, numberScroll, dataOfferCsv);
                 console.log('Fin del procesamiento de ofertas');
 
@@ -251,9 +277,8 @@ async function main() {
                     console.log('Click en ...');
                 }
                 
-                // ESPERANDO QUE CARGUE LA DATA DE LA OFERTA DE EMPLEO EN LA DERECHA
+                /*  ESPERANDO QUE CARGUE LA DATA DE LA OFERTA DE EMPLEO EN LA DERECHA */
                 await helpers.delay(1500);
-                // await page.waitForSelector(selBtnSimpleOffer, {
                 await page.waitForSelector(selDivApplyJob, {
                     timeout: 600000
                 });
@@ -271,15 +296,9 @@ async function main() {
 
                     await offerProcess(page, listCount, numberScroll, dataOfferCsv);
                 }
-            } // FIN DEL CICLO de PAGINACIONES
+            } /*  FIN DEL CICLO de PAGINACIONES */
         }else{
-            const listCount = await page.evaluate(()=>{
-                try{
-                    return Number(document.querySelector('[class="scaffold-layout__list-container"]').childElementCount);
-                }catch(e){
-                    return 0;
-                }
-            });
+            /* tramitando una sola pagina */
             await offerProcess(page, listCount, numberScroll, dataOfferCsv);
         }
 
@@ -288,7 +307,7 @@ async function main() {
         /** --------------------------------------------- */
 
         console.log("Fin de la depuracion");
-        await helpers.delay(60000000);
+        await helpers.delay(60000);
 
     } catch (err) { 
         console.error(err);
@@ -322,7 +341,7 @@ async function offerProcess(page, listCount, numberScroll, dataOfferCsv){
             updateInfoAuto(page,titleWin);
             console.log(titleWin);
             
-            console.log(titleOffer, companyOffer);
+            //console.log(titleOffer, companyOffer);
             dataExtract += '\n'+titleOffer+';';
             dataExtract += companyOffer+';';
 
@@ -349,99 +368,86 @@ async function offerProcess(page, listCount, numberScroll, dataOfferCsv){
             // CERRAR POPUP DEFAZADO
             cerrarPopupFinal(page);
 
-            const btnPostular = await page.$('[class="jobs-apply-button artdeco-button artdeco-button--3 artdeco-button--primary ember-view"]');
-            if(btnPostular){
-                console.log('Me voy a postular a esta oferta');
-                await helpers.delay(500);
-                await btnPostular.click();
-                await helpers.delay(1000);
-                let btnNext = false;
+            // const findNoOfferClick = nopostular.find((a)=> a.toLowerCase().indexOf(companyOffer.toLowerCase()) >= 0);
+            const findNoOfferClick = nopostular.find((a)=> companyOffer.toLowerCase().indexOf(a.toLowerCase()) >= 0);
+            //console.log(findNoOfferClick);
 
-                do{
-                    btnNext = await page.$('[class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view"]');
-                    console.log('Pase por aqui');
-                    await helpers.delay(800);
-                    
-                    /* Reforzando el Bton Cerrar */
-                    // cerrarVentanillaError(page);
-                    // await helpers.delay(600);
-                    
-                    /*-------------------------------- */
-                    
-                    if(btnNext){
+            if(!findNoOfferClick){
 
-                        const popupJobsApply = await page.$('[class="jobs-easy-apply-content"]');
-                        let titleWin = await popupJobsApply.$('h3');
-                        titleWin = await titleWin.evaluate(el => el.textContent);
-                        titleWin = titleWin.trim();
+                const btnPostular = await page.$('[class="jobs-apply-button artdeco-button artdeco-button--3 artdeco-button--primary ember-view"]');
+                if(btnPostular){
+                    console.log('Me voy a postular a esta oferta');
+                    await helpers.delay(500);
+                    await btnPostular.click();
+                    await helpers.delay(1000);
+                    let btnNext = false;
 
-                        console.log('Titulo de Pantalla: ',titleWin);
+                    do{
+                        btnNext = await page.$('[class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view"]');
+                        console.log('Pase por aqui');
+                        await helpers.delay(800);
+                        
+                        /* Reforzando el Bton Cerrar */
+                        // cerrarVentanillaError(page);
                         // await helpers.delay(600);
-
-                        // if(titleWin.toLowerCase().indexOf('contact') >= 0 || titleWin.toLowerCase().indexOf('info') >= 0){
-                        //     console.log('Se deja asi');
-                        //     //await helpers.delay(800);
-                        //     // setearInputs(page, inputTextDefault, numMovil);
-                        //     // await helpers.delay(500);
-                        //     // chooseCV(page);
-                        //     // await helpers.delay(600);
-                        // } 
                         
-                        // if(titleWin.toLowerCase().indexOf('currículum') >= 0 || titleWin.toLowerCase().indexOf('resume') >= 0){
-                        //     console.log('Adjuntar Curriculum');
-                        //     // await page.evaluate(()=>document.querySelector('[class="jobs-resume-picker__resume-list"]').children[0].querySelector('button').click());
-                        //     // chooseCV(page);
-                        //     // await helpers.delay(600);
-                        // } 
-
-                        // if(titleWin.toLowerCase().indexOf('review') >= 0){
-                        //     console.log('Finalizar aplicacion');
-                        //     //await helpers.delay(600);
-                        // }
+                        /*-------------------------------- */
                         
-                        console.log('SE PRENDIO LA LOCURA DE SETEADERA');
-                        await helpers.delay(300);
-                        setearInputs(page, inputTextDefault, numMovil);
-                        console.log('Se acabo seteadera');
-                        await helpers.delay(300);
-                        chooseCV(page);
-                        await helpers.delay(600);
+                        if(btnNext){
 
-                        // CERRAR a la fuerza si ocurre algun error
-                        const errorValidation = await page.$('[class="artdeco-inline-feedback__message"]');
-                        if(errorValidation){
-                            closedOfferPopup(page);
-                        }
-                            
+                            const popupJobsApply = await page.$('[class="jobs-easy-apply-content"]');
+                            let titleWin = await popupJobsApply.$('h3');
+                            titleWin = await titleWin.evaluate(el => el.textContent);
+                            titleWin = titleWin.trim();
 
-                        // await helpers.delay(300);
-                        console.log('Click Btn siguiente');
-                        //await btnNext.click();
-                        // Refuerzo del boton Cerrar
-                        await page.evaluate(()=>{
-                            try{
-                                document.querySelector('[class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view"]').click();
-                            }catch(e){
-                                console.log('Error: ', e);
+                            console.log('Titulo de Pantalla: ',titleWin);
+
+                            console.log('SE PRENDIO LA LOCURA DE SETEADERA');
+                            await helpers.delay(300);
+                            setearInputs(page, inputTextDefault, numMovil);
+                            console.log('Se acabo seteadera');
+                            await helpers.delay(300);
+                            chooseCV(page);
+                            await helpers.delay(600);
+
+                            // CERRAR a la fuerza si ocurre algun error
+                            const errorValidation = await page.$('[class="artdeco-inline-feedback__message"]');
+                            if(errorValidation){
+                                closedOfferPopup(page);
                             }
-                        });
-                        console.log('Click Next');
-                        await helpers.delay(600);
-                    }
+                                
+                            // await helpers.delay(300);
+                            console.log('Click Btn siguiente');
+                            //await btnNext.click();
+                            // Refuerzo del boton Cerrar
+                            await page.evaluate(()=>{
+                                try{
+                                    document.querySelector('[class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view"]').click();
+                                }catch(e){
+                                    console.log('Error: ', e);
+                                }
+                            });
+                            console.log('Click Next');
+                            await helpers.delay(600);
+                        }
 
-                }while(btnNext);
-                
-                console.log('Se acabo el proceso de postulación');
+                    }while(btnNext);
+                    
+                    console.log('Se acabo el proceso de postulación');
 
-                await helpers.delay(500);
-                await page.waitForSelector(btnCerrar, {
-                    timeout: 6000
-                });
-                console.log('Cerrando ventana Final de oferta recibida');
-                cerrarPopupFinal(page);
+                    await helpers.delay(500);
+                    await page.waitForSelector(btnCerrar, {
+                        timeout: 6000
+                    });
+                    console.log('Cerrando ventana Final de oferta recibida');
+                    cerrarPopupFinal(page);
 
-                updateInfoAuto(page,'Postulación finalizada correctamente');
-                await helpers.delay(1000);
+                    updateInfoAuto(page,'Postulación finalizada correctamente');
+                    await helpers.delay(1000);
+                }
+
+            }else{
+                console.log('CACA empresa Hostil.. No postularme a ', findNoOfferClick);
             }
 
             /* FIN de Solicitud de EMPLEO */
@@ -449,12 +455,15 @@ async function offerProcess(page, listCount, numberScroll, dataOfferCsv){
             await helpers.writeCsv(dataOfferCsv, dataExtract);
             await helpers.delay(1500);
             dataExtract="";
-
-            if( i == 5 || i == 10 || i == 15 || i == 20){
-                await page.evaluate((a)=>document.querySelector('[class="scaffold-layout__list"]').children[1].scrollTop = a, numberScroll);
-                console.log('Scroll BAJADO',numberScroll);
-                numberScroll += numberScroll;
-            }
+            
+            await page.evaluate((a)=>document.querySelector('[class="scaffold-layout__list"]').children[1].scrollTop = a, numberScroll);
+            numberScroll += numberScroll;
+            
+            // if( i == 5 || i == 10 || i == 15 || i == 20){
+            //     await page.evaluate((a)=>document.querySelector('[class="scaffold-layout__list"]').children[1].scrollTop = a, numberScroll);
+            //     console.log('Scroll BAJADO',numberScroll);
+            //     numberScroll += numberScroll;
+            // }
 
         }catch(e){
             //console.log('Error haciendo click: ',e);
@@ -464,6 +473,8 @@ async function offerProcess(page, listCount, numberScroll, dataOfferCsv){
 
     } // FIN DEL CICLO DE Ofertas de empleo
 }
+
+/**--------------------------------------------------------------------- */
 
 async function setearInputs(page, inputTextDefault, numMovil){
     try{
